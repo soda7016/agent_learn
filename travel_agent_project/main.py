@@ -1,10 +1,25 @@
 import re
 import os
+from pathlib import Path
 
 from llm_client import OpenAICompatibleClient
 from prompts import AGENT_SYSTEM_PROMPT
 from tools.weather import get_weather
 from tools.search_attraction import get_attraction
+
+
+def load_env_file(env_path: Path) -> None:
+    if not env_path.exists():
+        return
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+load_env_file(Path(__file__).resolve().parents[1] / ".env")
 
 # --- 0. 配置工具函数 ---
 # 将所有工具函数放入一个字典，方便后续调用
@@ -15,11 +30,11 @@ available_tools = {
 
 # --- 1. 配置LLM客户端 ---
 # 请根据您使用的服务，将这里替换成对应的凭证和地址
-API_KEY = "sk-ALABRof9mOJfQzxrP70kCGytXFWWhRIBuYGiz1Q6YjsqMe4e"
-BASE_URL = "https://api.kr777.top/v1"  
+API_KEY = os.environ.get("API_KEY")
+BASE_URL = os.environ.get("BASE_URL")
 MODEL_ID = "claude-sonnet-4-6"
-TAVILY_API_KEY="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"
-os.environ['TAVILY_API_KEY'] = "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"
+TAVILY_API_KEY= os.environ.get("TAVILY_API_KEY")
+os.environ['TAVILY_API_KEY'] = TAVILY_API_KEY
 
 llm = OpenAICompatibleClient(
     model=MODEL_ID,
